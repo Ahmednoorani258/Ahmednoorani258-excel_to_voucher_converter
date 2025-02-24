@@ -4,8 +4,19 @@ from docx import Document
 from io import BytesIO
 import zipfile
 import datetime
-import win32print
-import win32api
+import sys
+
+# Check if running on Windows
+IS_WINDOWS = sys.platform.startswith("win")
+if IS_WINDOWS:
+    try:
+        import win32print
+        import win32api
+    except ImportError:
+        win32print = None
+        win32api = None
+    import win32print
+    import win32api
 from num2words import num2words
 import time
 import os
@@ -46,7 +57,6 @@ def generate_voucher(template_bytes, employee_data, index):
         "Afzal .": employee_data.get("EmployeeName", ""),
         "Helper": employee_data.get("Designation", ""),
         "29,161": str(employee_data.get("Total", "")),
-        "1006015": employee_data.get("EmployeeCode", ""),
         "twenty nine thousand one hundred and sixty one": salary_words,
     }
     
@@ -58,8 +68,11 @@ def generate_voucher(template_bytes, employee_data, index):
     return voucher_file, doc
 
 def print_document(file_path):
-    printer_name = win32print.GetDefaultPrinter()
-    win32api.ShellExecute(0, "print", file_path, f'/d:"{printer_name}"', ".", 0)
+    if IS_WINDOWS and win32print and win32api:
+        printer_name = win32print.GetDefaultPrinter()
+        win32api.ShellExecute(0, "print", file_path, f'/d:"{printer_name}"', ".", 0)
+    else:
+        st.warning("Printing is not supported on this platform.")
 
 def threaded_print(voucher_files, save_dir):
     def print_job(file_path):
