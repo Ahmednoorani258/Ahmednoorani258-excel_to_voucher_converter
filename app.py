@@ -57,6 +57,7 @@ def generate_voucher(template_bytes, employee_data, index):
         "Afzal .": employee_data.get("EmployeeName", ""),
         "Helper": employee_data.get("Designation", ""),
         "29,161": str(employee_data.get("Total", "")),
+        "1006015": employee_data.get("EmployeeCode", ""),
         "twenty nine thousand one hundred and sixty one": salary_words,
     }
     
