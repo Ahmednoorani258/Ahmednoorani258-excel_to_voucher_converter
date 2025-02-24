@@ -71,11 +71,28 @@ def generate_voucher(template_bytes, employee_data, index):
 def print_document(file_path):
     if IS_WINDOWS and win32print and win32api:
         printer_name = win32print.GetDefaultPrinter()
-        win32api.ShellExecute(0, "print", file_path, f'/d:"{printer_name}"', ".", 0)
+        hprinter = win32print.OpenPrinter(printer_name)
+        try:
+            printer_info = win32print.GetPrinter(hprinter, 2)
+            job_info = win32print.StartDocPrinter(hprinter, 1, ("Voucher Print Job", None, "RAW"))
+            win32print.StartPagePrinter(hprinter)
+            with open(file_path, "rb") as f:
+                data = f.read()
+                win32print.WritePrinter(hprinter, data)
+            win32print.EndPagePrinter(hprinter)
+            win32print.EndDocPrinter(hprinter)
+        finally:
+            win32print.ClosePrinter(hprinter)
     else:
         st.warning("Printing is not supported on this platform.")
+    
 
 def threaded_print(voucher_files, save_dir):
+    def print_job(file_path):
+        if os.path.exists(file_path):
+            print_document(file_path)
+        else:
+            st.warning(f"File {file_path} not found!")
     def print_job(file_path):
         print_document(file_path)
     
